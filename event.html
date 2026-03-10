@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0">
+<title>Idol Factory - Event</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #FFB7C5; --lavender: #D4B8E0; --mint: #B8E8D0; --yellow: #FFF3B0;
+    --pink-dark: #FF85A1; --lavender-dark: #A98BC8;
+    --window-bg: #F0F8FF; --border: #8B7BB8; --text-dark: #3D2C6B;
+    --shadow: 3px 3px 0px #8B7BB8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1A1030;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .phone-frame {
+    width: 390px; height: 844px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 0 0 3px var(--border), 6px 6px 0 3px var(--lavender-dark);
+    background: #1A1030;
+  }
+
+  /* Scene management */
+  .scene {
+    position: absolute; inset: 0;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  .scene.active { opacity: 1; pointer-events: all; }
+
+  /* Win box */
+  .win-box {
+    background: var(--window-bg); border: 2.5px solid var(--border);
+    box-shadow: var(--shadow); border-radius: 2px; overflow: hidden;
+  }
+  .win-titlebar {
+    background: linear-gradient(90deg, var(--lavender), var(--pink));
+    padding: 5px 8px; display: flex; align-items: center; gap: 5px;
+    border-bottom: 2px solid var(--border);
+  }
+  .win-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--border); }
+  .win-dot.red { background: #FF6B6B; }
+  .win-dot.yellow { background: #FFD93D; }
+  .win-dot.green { background: #6BCB77; }
+  .win-title-text { font-family: 'Press Start 2P', monospace; font-size: 7px; color: var(--text-dark); margin-left: 4px; }
+  .win-body { padding: 20px; }
+
+  .btn-retro {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    padding: 10px 18px; border: 2px solid var(--border);
+    box-shadow: 3px 3px 0 var(--border); cursor: pointer;
+    color: var(--text-dark); border-radius: 2px;
+    transition: transform 0.1s, box-shadow 0.1s; display: inline-block;
+  }
+  .btn-retro:active { transform: translate(3px,3px); box-shadow: none; }
+  .btn-pink { background: var(--pink); }
+  .btn-lav { background: var(--lavender); }
+  .btn-yellow { background: var(--yellow); }
+  .btn-mint { background: var(--mint); }
+
+  /* ========== SCENE 1 ========== */
+  #scene1 {
+    background: #0D0820;
+    background-image:
+      linear-gradient(45deg,#1A1030 25%,transparent 25%),
+      linear-gradient(-45deg,#1A1030 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#1A1030 75%),
+      linear-gradient(-45deg,transparent 75%,#1A1030 75%);
+    background-size: 16px 16px;
+    background-position: 0 0,0 8px,8px -8px,-8px 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .s1-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .s1-particle {
+    position: absolute; font-size: 16px;
+    animation: s1Float linear infinite;
+    opacity: 0;
+  }
+  @keyframes s1Float {
+    0% { transform: translateY(110%) rotate(0deg) scale(0.5); opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { transform: translateY(-20%) rotate(720deg) scale(1.2); opacity: 0; }
+  }
+  .s1-box { position: relative; z-index: 2; width: 300px; }
+
+  /* ========== SCENE 2 ========== */
+  #scene2 {
+    background: #0D0820;
+  }
+  .s2-bg {
+    position: absolute; inset: 0;
+    background-image: url('./assets/bg_rooftop.png');
+    background-size: cover; background-position: center;
+  }
+  /* Fallback gradient if no image */
+  .s2-bg-fallback {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      #0D0820 0%, #1A1040 20%, #2D1B69 50%,
+      #1A0840 80%, #0D0420 100%);
+  }
+  .s2-bg-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      rgba(13,8,32,0.3) 0%,
+      rgba(13,8,32,0.0) 40%,
+      rgba(13,8,32,0.7) 75%,
+      rgba(13,8,32,0.95) 100%);
+  }
+  .s2-time {
+    position: absolute; top: 20px; left: 20px;
+    font-family: 'Press Start 2P', monospace; font-size: 10px;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 0 10px rgba(180,120,255,0.8);
+    z-index: 3;
+    animation: timePulse 2s ease-in-out infinite;
+  }
+  @keyframes timePulse {
+    0%,100% { opacity: 0.8; } 50% { opacity: 1; }
+  }
+  .s2-stars {
+    position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden;
+  }
+  .s2-star {
+    position: absolute; color: white; font-size: 8px;
+    animation: starTwinkle ease-in-out infinite;
+  }
+  @keyframes starTwinkle {
+    0%,100% { opacity: 0.2; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* Jinwoo full character */
+  .s2-char {
+    position: absolute; bottom: 180px; left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    width: 260px; z-index: 4;
+    transition: transform 0.8s cubic-bezier(0.34,1.56,0.64,1);
+    filter: drop-shadow(0 0 20px rgba(180,120,255,0.5));
+  }
+  .s2-char.show { transform: translateX(-50%) translateY(0); }
+  .s2-char img { width: 100%; display: block; }
+
+  /* Novel-game dialog box */
+  .dialog-box {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    z-index: 10;
+    background: rgba(13,8,32,0.92);
+    border-top: 2.5px solid #6B4B9B;
+    box-shadow: 0 -3px 0 #A98BC8;
+    padding: 16px 18px 20px;
+    min-height: 170px;
+  }
+  .dialog-name {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    color: var(--lavender); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dialog-name::before { content: ''; display: inline-block; width: 8px; height: 8px; background: var(--lavender); border-radius: 50%; }
+  .dialog-text {
+    font-size: 15px; color: #F0E8FF; line-height: 1.7;
+    min-height: 60px;
+  }
+  .dialog-cursor {
+    display: inline-block; width: 10px; height: 16px;
+    background: var(--lavender); margin-left: 4px;
+    animation: cursorBlink 0.8s step-end infinite;
+    vertical-align: middle;
+  }
+  @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .dialog-tap {
+    text-align: right; margin-top: 8px;
+    font-family: 'Press Start 2P', monospace; font-size: 7px;
+    color: var(--lavender); opacity: 0.7;
+    animation: tapBounce 1s ease-in-out infinite;
+  }
+  @keyframes tapBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+
+  /* Choice buttons */
+  .choices {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-top: 10px;
+  }
+  .choice-btn {
+    width: 100%; padding: 11px 14px; text-align: left;
+    font-family: 'Noto Sans KR', sans-serif; font-size: 13px; font-weight: 700;
+    background: rgba(40,20,70,0.9); color: #F0E8FF;
+    border: 2px solid #6B4B9B; box-shadow: 2px 2px 0 #4B3B7B;
+    cursor: pointer; border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .choice-btn:hover { background: rgba(80,40,120,0.9); border-color: var(--lavender); }
+  .choice-btn:active { transform: translate(2px,2px); box-shadow: none; }
+  .choice-btn.special { border-color: var(--pink); color: var(--pink); }
+
+  /* ========== SCENE 3 ========== */
+  #scene3 {
+    background: #0D0820;
+  }
+  .s3-bg {
+    position: absolute; inset: 0;
+    background-image: url('./assets/bg_rooftop.png');
+    background-size: cover; background-position: center;
+  }
+  .s3-overlay {
+    position: absolute; inset: 0;
+    background: rgba(13,8,32,0.7);
+  }
+  .s3-char {
+    position: absolute; bottom: 180px; left: 50%;
+    transform: translateX(-50%);
+    width: 260px; z-index: 4;
+    filter: drop-shadow(0 0 20px rgba(255,120,180,0.6));
+  }
+  .s3-char img { width: 100%; display: block; }
+
+  /* Heart particles */
+  .heart-particle {
+    position: absolute; pointer-events: none; z-index: 20;
+    font-size: 18px;
+    animation: heartBurst ease-out forwards;
+  }
+  @keyframes heartBurst {
+    0% { transform: translate(0,0) scale(0.5); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(1.2); opacity: 0; }
+  }
+
+  /* ========== SCENE 4 ========== */
+  #scene4 {
+    background: #0D0820;
+    background-image:
+      linear-gradient(45deg,#1A1030 25%,transparent 25%),
+      linear-gradient(-45deg,#1A1030 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#1A1030 75%),
+      linear-gradient(-45deg,transparent 75%,#1A1030 75%);
+    background-size: 16px 16px;
+    background-position: 0 0,0 8px,8px -8px,-8px 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .s4-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .s4-particle {
+    position: absolute; animation: s4Float linear forwards; opacity: 0;
+  }
+  @keyframes s4Float {
+    0% { transform: translateY(110%); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-20%); opacity: 0; }
+  }
+  .clear-box { position: relative; z-index: 2; width: 320px; }
+  .clear-star {
+    text-align: center; font-size: 40px; margin: 16px 0 8px;
+    animation: starSpin 3s linear infinite;
+  }
+  @keyframes starSpin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+  /* Float text */
+  .float-text {
+    position: absolute; font-family: 'Press Start 2P', monospace; font-size: 14px;
+    color: var(--pink); pointer-events: none; z-index: 50;
+    animation: floatUp 1.4s ease forwards;
+  }
+  @keyframes floatUp {
+    0%{transform:translateY(0) scale(1);opacity:1}
+    100%{transform:translateY(-80px) scale(1.3);opacity:0}
+  }
+
+  /* Toast */
+  .toast {
+    position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+    background: rgba(13,8,32,0.95); color: white;
+    font-family: 'Noto Sans KR', sans-serif; font-size: 13px;
+    padding: 10px 20px; border: 2px solid var(--lavender);
+    opacity: 0; pointer-events: none; white-space: nowrap; z-index: 100;
+    transition: opacity 0.3s; border-radius: 2px;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+
+  <!-- ===== SCENE 1: Top Fan 달성 ===== -->
+  <div class="scene active" id="scene1">
+    <div class="s1-particles" id="s1particles"></div>
+    <div class="s1-box">
+      <div class="win-box">
+        <div class="win-titlebar" style="background: linear-gradient(90deg,#2D1B69,#6B3B8B);">
+          <span class="win-dot red"></span><span class="win-dot yellow"></span><span class="win-dot green"></span>
+          <span class="win-title-text" style="color:#E8D0FF;">top_fan.exe</span>
+        </div>
+        <div class="win-body" style="background:#1A0840; text-align:center;">
+          <p style="font-size:48px; margin-bottom:12px;">🏆</p>
+          <p style="font-family:'Press Start 2P',monospace; font-size:10px; color:var(--yellow); margin-bottom:10px; line-height:1.6;">TOP FAN<br>달성!</p>
+          <p style="font-size:14px; color:#E8D0FF; margin-bottom:20px; line-height:1.6;">진우의 특별한 메시지가<br>도착했어요 💌</p>
+          <button class="btn-retro btn-pink" onclick="goScene2()">확인하기 →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCENE 2: Late Night Message ===== -->
+  <div class="scene" id="scene2">
+    <div class="s2-bg-fallback"></div>
+    <div class="s2-bg" id="s2bg"></div>
+    <div class="s2-bg-overlay"></div>
+    <div class="s2-time">🌙 01:23 AM</div>
+
+    <!-- Dialog box -->
+    <div class="dialog-box" id="dialogBox">
+      <div class="dialog-name">진우</div>
+      <div class="dialog-text" id="dialogText">
+        <span id="dialogDisplay"></span><span class="dialog-cursor" id="dialogCursor"></span>
+      </div>
+      <div class="dialog-tap" id="dialogTap">화면을 탭하세요 ▼</div>
+      <div class="choices" id="choiceArea" style="display:none;">
+        <button class="choice-btn" onclick="selectChoice('A')">A. 혹시 나야?</button>
+        <button class="choice-btn" onclick="selectChoice('B')">B. 누군데요?</button>
+        <button class="choice-btn special" onclick="selectChoice('C')">C. ...나도 생각했어 ✦</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCENE 3: 선택 반응 ===== -->
+  <div class="scene" id="scene3">
+    <div class="s3-bg"></div>
+    <div class="s3-overlay"></div>
+    <div class="dialog-box" id="s3dialog">
+      <div class="dialog-name" id="s3name">진우</div>
+      <div class="dialog-text" id="s3text" style="color:#FFE0F0;"></div>
+      <div style="margin-top:16px; text-align:center;">
+        <button class="btn-retro btn-pink" onclick="goScene4()" id="continueBtn" style="display:none;">계속하기 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCENE 4: 이벤트 엔딩 ===== -->
+  <div class="scene" id="scene4">
+    <div class="s4-particles" id="s4particles"></div>
+    <div class="clear-box">
+      <div class="win-box">
+        <div class="win-titlebar" style="background:linear-gradient(90deg,#2D1B69,#8B3B6B);">
+          <span class="win-dot red"></span><span class="win-dot yellow"></span><span class="win-dot green"></span>
+          <span class="win-title-text" style="color:#FFE0F0;">event_clear.exe</span>
+        </div>
+        <div class="win-body" style="background:#1A0840; text-align:center;">
+          <div class="clear-star">🌙</div>
+          <p style="font-family:'Press Start 2P',monospace; font-size:8px; color:var(--yellow); margin-bottom:8px; line-height:1.8;">Late Night<br>Message Clear! ✨</p>
+          <div style="background:rgba(80,40,120,0.5); border:2px solid #6B4B9B; padding:12px; margin:12px 0; border-radius:2px;">
+            <p style="font-size:22px; margin-bottom:6px;">💜</p>
+            <p style="font-family:'Press Start 2P',monospace; font-size:7px; color:var(--lavender); line-height:1.8;">Secret Crush<br>단계 해금!</p>
+          </div>
+          <p style="font-size:12px; color:#B8A0D8; margin-bottom:18px; line-height:1.6;" id="bonusPts"></p>
+          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn-retro btn-yellow" style="font-size:7px;" onclick="location.href='index.html'">🏠 홈으로</button>
+            <button class="btn-retro btn-pink" style="font-size:7px;" onclick="location.href='chat.html?char=jinwoo'">💬 진우랑 채팅</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  // ===== SCENE 1: Particles =====
+  function createS1Particles() {
+    const c = document.getElementById('s1particles');
+    const items = ['✦','♥','★','♡','✿','💜','🌙'];
+    for (let i = 0; i < 20; i++) {
+      const p = document.createElement('span');
+      p.className = 's1-particle';
+      p.textContent = items[i % items.length];
+      p.style.left = (Math.random() * 90) + '%';
+      p.style.animationDuration = (2 + Math.random() * 3) + 's';
+      p.style.animationDelay = (Math.random() * 3) + 's';
+      p.style.fontSize = (10 + Math.random() * 14) + 'px';
+      p.style.color = ['#FFB7C5','#D4B8E0','#FFD700','#B8E8D0','#E8C0FF'][i % 5];
+      c.appendChild(p);
+    }
+  }
+  createS1Particles();
+
+  // ===== SCENE 2: Dialog =====
+  const dialogs = [
+    '자고 있었어요? 🌙',
+    '나 오늘 공연하면서...',
+    '자꾸 한 명이 생각났어.'
+  ];
+  let dialogIdx = 0;
+  let isAnimating = false;
+
+  function typeText(text, callback) {
+    isAnimating = true;
+    const el = document.getElementById('dialogDisplay');
+    el.textContent = '';
+    let i = 0;
+    const interval = setInterval(() => {
+      el.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        isAnimating = false;
+        if (callback) callback();
+      }
+    }, 40);
+  }
+
+  function showDialog(idx) {
+    if (idx < dialogs.length) {
+      document.getElementById('dialogCursor').style.display = 'inline-block';
+      document.getElementById('dialogTap').style.display = 'block';
+      document.getElementById('choiceArea').style.display = 'none';
+      typeText(dialogs[idx]);
+    } else {
+      // Show choices
+      document.getElementById('dialogDisplay').textContent = '...';
+      document.getElementById('dialogCursor').style.display = 'none';
+      document.getElementById('dialogTap').style.display = 'none';
+      document.getElementById('choiceArea').style.display = 'flex';
+    }
+  }
+
+  function advanceDialog() {
+    if (isAnimating) {
+      // Skip typing
+      const text = dialogs[dialogIdx] || '';
+      document.getElementById('dialogDisplay').textContent = text;
+      isAnimating = false;
+      return;
+    }
+    dialogIdx++;
+    showDialog(dialogIdx);
+  }
+
+  // Create stars
+  function createStars() {
+    const c = document.getElementById('s2stars');
+    for (let i = 0; i < 30; i++) {
+      const s = document.createElement('span');
+      s.className = 's2-star';
+      s.textContent = '✦';
+      s.style.left = (Math.random() * 95) + '%';
+      s.style.top = (Math.random() * 60) + '%';
+      s.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+      s.style.animationDelay = (Math.random() * 2) + 's';
+      s.style.opacity = Math.random() * 0.6 + 0.2;
+      c.appendChild(s);
+    }
+  }
+
+  // ===== SCENE 3: Choices =====
+  const choiceData = {
+    A: { text: '다행이다... 사실 너한테 하고 싶은 말이 있었어. 😶', pts: 15, special: false },
+    B: { text: '별건 아닌데. 그냥 네 생각이 났어. 이상하지?', pts: 10, special: false },
+    C: { text: '...그랬어? 나만 그런 게 아니었구나. 🫦', pts: 20, special: true }
+  };
+
+  function selectChoice(choice) {
+    const data = choiceData[choice];
+    showScene('scene3');
+
+    // Set response text with typewriter
+    const el = document.getElementById('s3text');
+    el.textContent = '';
+    let i = 0;
+    const txt = data.text;
+    const interval = setInterval(() => {
+      el.textContent += txt[i]; i++;
+      if (i >= txt.length) {
+        clearInterval(interval);
+        setTimeout(() => {
+          document.getElementById('continueBtn').style.display = 'inline-block';
+        }, 300);
+      }
+    }, 40);
+
+    // Add points
+    addPoints(data.pts);
+
+    // Heart particles
+    spawnHearts(data.special ? 30 : 15, data.special);
+
+    // Float text
+    spawnFloat(`+${data.pts}p`, data.special);
+
+    // Store choice bonus
+    localStorage.setItem('eventBonus', data.pts);
+  }
+
+  function spawnHearts(count, special) {
+    const frame = document.querySelector('.phone-frame');
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const h = document.createElement('span');
+        h.className = 'heart-particle';
+        h.textContent = special ? ['💜','♥','✦','🌙'][i % 4] : '♥';
+        const cx = 100 + Math.random() * 190;
+        const cy = 400 + Math.random() * 100;
+        h.style.left = cx + 'px';
+        h.style.top = cy + 'px';
+        const tx = (Math.random() - 0.5) * 160 + 'px';
+        const ty = -(40 + Math.random() * 120) + 'px';
+        h.style.setProperty('--tx', tx);
+        h.style.setProperty('--ty', ty);
+        h.style.animationDuration = (0.6 + Math.random() * 0.6) + 's';
+        h.style.fontSize = special ? (14 + Math.random() * 10) + 'px' : '16px';
+        frame.appendChild(h);
+        setTimeout(() => h.remove(), 1400);
+      }, i * (special ? 50 : 80));
+    }
+  }
+
+  function spawnFloat(text, special) {
+    const el = document.createElement('span');
+    el.className = 'float-text';
+    el.textContent = text + (special ? ' ⭐⭐' : ' ⭐');
+    el.style.left = '50%';
+    el.style.transform = 'translateX(-50%)';
+    el.style.bottom = '200px';
+    if (special) el.style.color = '#FFD700';
+    document.querySelector('.phone-frame').appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+  }
+
+  function addPoints(pts) {
+    let current = parseInt(localStorage.getItem('fanPoints') || '0');
+    current += pts;
+    localStorage.setItem('fanPoints', current);
+  }
+
+  // ===== SCENE 4 =====
+  function createS4Particles() {
+    const c = document.getElementById('s4particles');
+    const items = ['💜','✦','🌙','♥','★','✿'];
+    for (let i = 0; i < 24; i++) {
+      const p = document.createElement('span');
+      p.className = 's4-particle';
+      p.textContent = items[i % items.length];
+      p.style.left = (Math.random() * 90) + '%';
+      p.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+      p.style.animationDelay = (Math.random() * 1) + 's';
+      p.style.fontSize = (12 + Math.random() * 12) + 'px';
+      p.style.color = ['#FFB7C5','#D4B8E0','#FFD700','#B8E8D0','#E8C0FF'][i % 5];
+      c.appendChild(p);
+    }
+  }
+
+  // ===== Scene transitions =====
+  function showScene(id) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function goScene2() {
+    showScene('scene2');
+    setTimeout(() => showDialog(0), 500);
+    document.getElementById('scene2').addEventListener('click', advanceDialog);
+  }
+
+  function goScene4() {
+    localStorage.setItem('fanLevel', 'secret');
+    const bonus = parseInt(localStorage.getItem('eventBonus') || '15');
+    document.getElementById('bonusPts').textContent = `획득 포인트: +${bonus}p ✦ Secret Crush 해금!`;
+    createS4Particles();
+    showScene('scene4');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+</script>
+</body>
+</html>

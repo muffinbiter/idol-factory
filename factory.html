@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0">
+<title>Idol Factory - Factory</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #FFB7C5; --lavender: #D4B8E0; --mint: #B8E8D0; --yellow: #FFF3B0;
+    --pink-dark: #FF85A1; --lavender-dark: #A98BC8;
+    --window-bg: #F0F8FF; --border: #8B7BB8; --text-dark: #3D2C6B;
+    --shadow: 3px 3px 0px #8B7BB8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #A8D8D8;
+    background-image:
+      linear-gradient(45deg,#B0DEDE 25%,transparent 25%),
+      linear-gradient(-45deg,#B0DEDE 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#B0DEDE 75%),
+      linear-gradient(-45deg,transparent 75%,#B0DEDE 75%);
+    background-size: 20px 20px;
+    background-position: 0 0,0 10px,10px -10px,-10px 0px;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .phone-frame {
+    width: 390px; height: 844px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 0 0 3px var(--border), 6px 6px 0 3px var(--lavender-dark);
+    display: flex; flex-direction: column;
+    background: #C8EFEF;
+    background-image:
+      linear-gradient(45deg,#B0DEDE 25%,transparent 25%),
+      linear-gradient(-45deg,#B0DEDE 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#B0DEDE 75%),
+      linear-gradient(-45deg,transparent 75%,#B0DEDE 75%);
+    background-size: 16px 16px;
+    background-position: 0 0,0 8px,8px -8px,-8px 0;
+  }
+
+  /* Header */
+  .top-header {
+    background: var(--window-bg); border-bottom: 2.5px solid var(--border);
+    box-shadow: 0 2px 0 var(--lavender); padding: 10px 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; z-index: 10; position: relative;
+  }
+  .header-back {
+    position: absolute; left: 16px;
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    background: var(--yellow); border: 2px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border); padding: 6px 10px;
+    cursor: pointer; color: var(--text-dark); border-radius: 2px;
+  }
+  .header-back:active { transform: translate(2px,2px); box-shadow: none; }
+  .header-title {
+    font-family: 'Press Start 2P', monospace; font-size: 9px; color: var(--text-dark);
+  }
+
+  /* Scroll content */
+  .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 16px 0; }
+
+  /* Step management */
+  .step { display: none; }
+  .step.active { display: block; }
+
+  /* Win box */
+  .win-box {
+    background: var(--window-bg); border: 2.5px solid var(--border);
+    box-shadow: var(--shadow); border-radius: 2px; overflow: hidden; margin-bottom: 12px;
+  }
+  .win-titlebar {
+    background: linear-gradient(90deg, var(--lavender), var(--pink));
+    padding: 5px 8px; display: flex; align-items: center; gap: 5px;
+    border-bottom: 2px solid var(--border);
+  }
+  .win-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--border); }
+  .win-dot.red { background: #FF6B6B; }
+  .win-dot.yellow { background: #FFD93D; }
+  .win-dot.green { background: #6BCB77; }
+  .win-title-text { font-family: 'Press Start 2P', monospace; font-size: 7px; color: var(--text-dark); margin-left: 4px; }
+  .win-body { padding: 16px; }
+
+  /* Step indicator */
+  .step-indicator {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; margin-bottom: 16px;
+  }
+  .step-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 2px solid var(--border); background: white;
+  }
+  .step-dot.active { background: var(--pink-dark); }
+  .step-dot.done { background: var(--lavender-dark); }
+  .step-line { width: 24px; height: 2px; background: var(--border); }
+
+  /* Inputs */
+  .input-retro {
+    width: 100%; padding: 10px 12px;
+    border: 2px solid var(--border); box-shadow: inset 2px 2px 0 rgba(0,0,0,0.08);
+    font-family: 'Noto Sans KR', sans-serif; font-size: 14px;
+    background: white; color: var(--text-dark); outline: none; border-radius: 2px;
+  }
+  .input-retro:focus { border-color: var(--pink-dark); }
+  textarea.input-retro { resize: none; min-height: 80px; line-height: 1.6; }
+
+  /* Buttons */
+  .btn-retro {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    padding: 10px 18px; border: 2px solid var(--border);
+    box-shadow: 3px 3px 0 var(--border); cursor: pointer;
+    color: var(--text-dark); border-radius: 2px;
+    transition: transform 0.1s, box-shadow 0.1s; display: inline-block;
+  }
+  .btn-retro:active { transform: translate(3px,3px); box-shadow: none; }
+  .btn-pink { background: var(--pink); }
+  .btn-lav { background: var(--lavender); }
+  .btn-yellow { background: var(--yellow); }
+  .btn-mint { background: var(--mint); }
+  .btn-full { width: 100%; text-align: center; display: block; }
+
+  /* Tag buttons */
+  .tag-grid { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0; }
+  .tag-btn {
+    font-family: 'Noto Sans KR', sans-serif; font-size: 12px; font-weight: 700;
+    padding: 7px 12px; background: white;
+    border: 2px solid var(--border); box-shadow: 2px 2px 0 var(--border);
+    cursor: pointer; color: var(--text-dark); border-radius: 2px;
+    transition: all 0.12s;
+  }
+  .tag-btn.selected { background: var(--pink); transform: translate(2px,2px); box-shadow: none; }
+  .tag-btn.dark-selected { background: var(--lavender); transform: translate(2px,2px); box-shadow: none; }
+
+  /* Style select */
+  .style-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+  .style-btn {
+    font-family: 'Noto Sans KR', sans-serif; font-size: 13px; font-weight: 700;
+    padding: 10px; text-align: center;
+    background: white; border: 2px solid var(--border); box-shadow: 2px 2px 0 var(--border);
+    cursor: pointer; color: var(--text-dark); border-radius: 2px;
+    transition: all 0.12s;
+  }
+  .style-btn.selected { background: var(--yellow); transform: translate(2px,2px); box-shadow: none; }
+
+  /* Divider */
+  .divider {
+    display: flex; align-items: center; gap: 8px; margin: 12px 0;
+    font-family: 'Press Start 2P', monospace; font-size: 6px; color: #9B8BB8;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Loading step */
+  #step3 { text-align: center; }
+  .loading-box {
+    background: var(--window-bg); border: 2.5px solid var(--border);
+    box-shadow: var(--shadow); border-radius: 2px; overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .heart-bar { display: flex; justify-content: center; gap: 4px; margin: 16px 0 8px; }
+  .heart-bar span { font-size: 20px; transition: opacity 0.3s; }
+  .loading-text {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    color: var(--lavender-dark); min-height: 20px; padding: 0 16px 16px;
+    line-height: 1.8; text-align: center;
+  }
+  .loading-spinner {
+    font-size: 32px; display: block; margin: 0 auto 8px;
+    animation: spinHeart 1s linear infinite;
+  }
+  @keyframes spinHeart { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+  /* Result card */
+  .result-card {
+    background: var(--window-bg); border: 2.5px solid var(--border);
+    box-shadow: var(--shadow); border-radius: 2px; overflow: hidden;
+    margin-bottom: 12px; animation: cardReveal 0.4s ease;
+  }
+  @keyframes cardReveal {
+    0%{transform:scale(0.9) translateY(10px);opacity:0}
+    100%{transform:scale(1) translateY(0);opacity:1}
+  }
+  .result-card img {
+    width: 100%; aspect-ratio: 1; object-fit: cover; object-position: top;
+    display: block; border-bottom: 2px solid var(--border);
+  }
+  .result-card-body { padding: 14px; }
+  .result-name {
+    font-family: 'Noto Sans KR', sans-serif; font-weight: 700;
+    font-size: 22px; color: var(--text-dark); margin-bottom: 3px;
+  }
+  .result-concept { font-size: 12px; color: #7B6FA0; margin-bottom: 8px; }
+  .result-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+  .result-tag {
+    font-size: 10px; font-weight: 700; background: var(--mint);
+    border: 1.5px solid var(--border); padding: 3px 8px; border-radius: 2px; color: var(--text-dark);
+  }
+  .result-intro {
+    font-size: 12px; color: #7B6FA0; line-height: 1.6;
+    border-top: 1.5px dashed var(--border); padding-top: 8px; margin-top: 4px;
+  }
+  .result-fans {
+    font-size: 12px; color: #9B8BB8; margin-top: 6px;
+  }
+  .common-badge {
+    display: inline-block; font-family: 'Press Start 2P', monospace; font-size: 6px;
+    background: #E0E0E0; color: #666; padding: 3px 8px;
+    border: 1.5px solid #999; border-radius: 2px; margin-bottom: 6px;
+  }
+
+  /* Particles */
+  .particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+  .particle {
+    position: absolute; animation: pFloat linear forwards; opacity: 0;
+  }
+  @keyframes pFloat {
+    0%{transform:translateY(110%) rotate(0deg);opacity:0}
+    10%{opacity:1} 90%{opacity:1}
+    100%{transform:translateY(-20%) rotate(360deg);opacity:0}
+  }
+
+  /* Section label */
+  .section-label {
+    font-family: 'Press Start 2P', monospace; font-size: 7px;
+    color: var(--text-dark); margin-bottom: 8px; display: block;
+  }
+
+  /* Tab bar */
+  .tabbar {
+    height: 60px; flex-shrink: 0;
+    background: var(--window-bg); border-top: 2.5px solid var(--border);
+    display: flex; box-shadow: 0 -2px 0 var(--lavender-dark); z-index: 10;
+  }
+  .tab-btn {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+    background: none; border: none; cursor: pointer;
+    font-family: 'Press Start 2P', monospace; font-size: 6px;
+    color: #9B8BB8; border-right: 1.5px solid var(--border);
+    transition: background 0.15s;
+  }
+  .tab-btn:last-child { border-right: none; }
+  .tab-btn.active { background: var(--lavender); color: var(--text-dark); }
+  .tab-btn span:first-child { font-size: 18px; }
+
+  /* Toast */
+  .toast {
+    position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--text-dark); color: white;
+    font-family: 'Noto Sans KR', sans-serif; font-size: 13px;
+    padding: 10px 20px; border: 2px solid var(--lavender);
+    opacity: 0; pointer-events: none; white-space: nowrap; z-index: 100;
+    transition: opacity 0.3s; border-radius: 2px;
+  }
+  .toast.show { opacity: 1; }
+
+  /* Complete header */
+  .complete-header {
+    text-align: center; padding: 12px 0 4px;
+    position: relative; z-index: 2;
+  }
+  .complete-title {
+    font-family: 'Press Start 2P', monospace; font-size: 10px;
+    color: var(--text-dark); line-height: 1.8;
+  }
+  .complete-stars { font-size: 20px; letter-spacing: 4px; }
+</style>
+</head>
+<body>
+<div class="phone-frame" id="phoneFrame">
+
+  <!-- Header -->
+  <div class="top-header">
+    <button class="header-back" onclick="location.href='index.html'">← 홈</button>
+    <span class="header-title">✦ FACTORY</span>
+  </div>
+
+  <!-- Scroll area -->
+  <div class="scroll-area" id="scrollArea">
+
+    <!-- ===== STEP 1: 이름 입력 ===== -->
+    <div class="step active" id="step1">
+      <div class="win-box">
+        <div class="win-titlebar">
+          <span class="win-dot red"></span><span class="win-dot yellow"></span><span class="win-dot green"></span>
+          <span class="win-title-text">create_idol.exe</span>
+        </div>
+        <div class="win-body">
+          <div class="step-indicator">
+            <div class="step-dot active"></div>
+            <div class="step-line"></div>
+            <div class="step-dot"></div>
+            <div class="step-line"></div>
+            <div class="step-dot"></div>
+            <div class="step-line"></div>
+            <div class="step-dot"></div>
+          </div>
+          <p style="font-family:'Press Start 2P',monospace; font-size:9px; color:var(--text-dark); text-align:center; margin-bottom:6px; line-height:1.7;">아이돌의 이름을<br>지어줘요 ✦</p>
+          <p style="font-size:12px; color:#7B6FA0; text-align:center; margin-bottom:16px;">당신만의 특별한 아이돌을 만들어보세요</p>
+          <input class="input-retro" id="idolName" type="text" placeholder="아이돌 이름 입력..." maxlength="12">
+          <div style="display:flex; justify-content:center; margin-top:16px;">
+            <button class="btn-retro btn-pink" onclick="goStep2()">다음 → </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Decorative hint -->
+      <div class="win-box">
+        <div class="win-titlebar">
+          <span class="win-dot red"></span><span class="win-dot yellow"></span><span class="win-dot green"></span>
+          <span class="win-title-text">tip.txt</span>
+        </div>
+        <div class="win-body" style="font-size:12px; color:#7B6FA0; line-height:1.8;">
+          💡 <b>Factory</b>에서 나만의 AI 아이돌을 직접 만들 수 있어요!<br>
+          이름, 성격, 스타일을 입력하면<br>
+          나만의 아이돌 카드가 생성돼요 ✦
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 2: 프롬프트 입력 ===== -->
+    <div class="step" id="step2">
+      <div class="win-box">
+        <div class="win-titlebar">
+          <span class="win-dot red"></span><span class="win-dot yellow"></span><span class="win-dot green"></span>
+          <span class="win-title-text">personality.exe</span>
+        </div>
+        <div class="win-body">
+          <div class="step-indicator">
+            <div class="step-dot done"></div>
+            <div class="step-line"></div>
+            <div class="step-dot active"></div>
+            <div class="step-line"></div>
+            <div class="step-dot"></div>
+            <div class="step-line"></div>
+            <div class="step-dot"></div>
+          </div>
+          <p style="font-family:'Press Start 2P',monospace; font-size:9px; color:var(--text-dark); text-align:center; margin-bottom:16px; line-height:1.7;">어떤 아이돌을<br>만들고 싶어요? ✦</p>
+
+          <span class="section-label">✦ 직접 설명하기</span>
+          <textarea class="input-retro" id="idolPrompt" placeholder="예) 차갑지만 알고보면 다정한 천재 아이돌..."></textarea>
+
+          <div class="divider">또는 빠른 선택</div>
+
+          <span class="section-label">✦ 성격 태그</span>
+          <div class="tag-grid" id="tagGrid">
+            <button class="tag-btn" data-tag="#따뜻함" data-type="bright" onclick="toggleTag(this)">🌸 #따뜻함</button>
+            <button class="tag-btn" data-tag="#차가움" data-type="dark" onclick="toggleTag(this)">❄️ #차가움</button>
+            <button class="tag-btn" data-tag="#츤데레" data-type="dark" onclick="toggleTag(this)">😤 #츤데레</button>
+            <button class="tag-btn" data-tag="#순수함" data-type="bright" onclick="toggleTag(this)">✨ #순수함</button>
+            <button class="tag-btn" data-tag="#집착형" data-type="dark" onclick="toggleTag(this)">🔗 #집착형</button>
+            <button class="tag-btn" data-tag="#카리스마" data-type="dark" onclick="toggleTag(this)">🔥 #카리스마</button>
+            <button class="tag-btn" data-tag="#엉뚱함" data-type="bright" onclick="toggleTag(this)">🌀 #엉뚱함</button>
+            <button class="tag-btn" data-tag="#수줍음" data-type="bright" onclick="toggleTag(this)">🌷 #수줍음</button>
+          </div>
+
+          <span class="section-label" style="margin-top:4px;">✦ 스타일 선택</span>
+          <div class="style-grid" id="styleGrid">
+            <button class="style-btn" data-style="팝아이돌" onclick="selectStyle(this)">🎤 팝아이돌</button>
+            <button class="style-btn" data-style="밴드보컬" onclick="selectStyle(this)">🎸 밴드보컬</button>
+            <button class="style-btn" data-style="래퍼" onclick="selectStyle(this)">🎵 래퍼</button>
+            <button class="style-btn" data-style="댄서" onclick="selectStyle(this)">💃 댄서</button>
+          </div>
+
+          <button class="btn-retro btn-pink btn-full" style="margin-top:8px; font-size:9px; padding:12px;" onclick="goStep3()">생성하기 ✦</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 3: 로딩 ===== -->
+    <div class="step" id="step3">
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:500px;">
+        <div class="loading-box" style="width:300px;">
+          <div class="win-titlebar">
+            <span class="win-dot red"></span><span class="win-dot yellow"></span><span class="win-dot green"></span>
+            <span class="win-title-text">generating.exe</span>
+          </div>
+          <div class="win-body" style="text-align:center;">
+            <span class="loading-spinner">✦</span>
+            <div class="heart-bar" id="heartBar">
+              <span>♥</span><span>♥</span><span>♥</span><span>♥</span>
+              <span style="color:#ccc;">♡</span><span style="color:#ccc;">♡</span>
+              <span style="color:#ccc;">♡</span><span style="color:#ccc;">♡</span>
+            </div>
+            <p class="loading-text" id="loadingText">성격을 분석하고 있어요...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 4: 결과 ===== -->
+    <div class="step" id="step4">
+      <div class="particles" id="resultParticles"></div>
+      <div style="position:relative; z-index:2;">
+        <div class="complete-header">
+          <div class="complete-stars">✦ ✦ ✦</div>
+          <p class="complete-title">생성 완료!</p>
+          <div class="complete-stars" style="font-size:14px;">♥ ♥ ♥</div>
+        </div>
+
+        <div class="result-card" id="resultCard">
+          <img id="resultImg" src="./assets/preset_bright.png" alt="아이돌">
+          <div class="result-card-body">
+            <div class="common-badge">⚪ COMMON</div>
+            <p class="result-name" id="resultName">아이돌 이름</p>
+            <p class="result-concept" id="resultConcept">✦ 팝아이돌</p>
+            <div class="result-tags" id="resultTags"></div>
+            <p class="result-intro" id="resultIntro"></p>
+            <p class="result-fans">👥 0 fans · 방금 생성됨</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <button class="btn-retro btn-pink" style="flex:1; text-align:center; font-size:7px; padding:12px 8px;" onclick="registerToHome()">홈에 등록하기 ❤️</button>
+          <button class="btn-retro btn-yellow" style="flex:1; text-align:center; font-size:7px; padding:12px 8px;" onclick="restart()">다시 만들기 ↺</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end scroll-area -->
+
+  <!-- Tab bar -->
+  <div class="tabbar">
+    <button class="tab-btn" onclick="location.href='index.html'"><span>🏠</span><span>HOME</span></button>
+    <button class="tab-btn active"><span>✦</span><span>FACTORY</span></button>
+    <button class="tab-btn" onclick="showToast('준비 중이에요 🚧')"><span>👤</span><span>MY PAGE</span></button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  const brightTags = ['#따뜻함','#순수함','#수줍음','#엉뚱함'];
+  const darkTags   = ['#차가움','#츤데레','#집착형','#카리스마'];
+
+  const introTemplates = {
+    bright: [
+      '따뜻한 미소로 모든 팬의 마음을 녹이는 아이돌.',
+      '순수한 눈빛 하나로 모든 걸 말하는 감성 아이돌.',
+      '팬들에게 항상 포근함을 주는 힐링 그 자체.',
+    ],
+    dark: [
+      '차가운 외면 뒤에 뜨거운 진심을 숨기고 있는 아이돌.',
+      '쉽게 마음을 열지 않지만, 한번 열면 전부를 주는 타입.',
+      '강렬한 카리스마로 무대를 압도하는 퍼포먼스의 제왕.',
+    ]
+  };
+
+  let selectedTags = [];
+  let selectedStyle = '';
+  let resultType = 'bright';
+
+  function showStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step'+n).classList.add('active');
+    document.getElementById('scrollArea').scrollTop = 0;
+  }
+
+  function goStep2() {
+    const name = document.getElementById('idolName').value.trim();
+    if (!name) { showToast('이름을 입력해주세요 💌'); return; }
+    showStep(2);
+  }
+
+  function toggleTag(btn) {
+    const tag = btn.dataset.tag;
+    const type = btn.dataset.type;
+    const idx = selectedTags.indexOf(tag);
+    if (idx > -1) {
+      selectedTags.splice(idx, 1);
+      btn.classList.remove('selected','dark-selected');
+    } else {
+      selectedTags.push(tag);
+      btn.classList.add(type === 'bright' ? 'selected' : 'dark-selected');
+      // auto-add to textarea
+      const ta = document.getElementById('idolPrompt');
+      if (!ta.value.includes(tag)) {
+        ta.value = (ta.value + ' ' + tag).trim();
+      }
+    }
+  }
+
+  function selectStyle(btn) {
+    document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedStyle = btn.dataset.style;
+  }
+
+  function goStep3() {
+    const name = document.getElementById('idolName').value.trim();
+    if (!name) { showToast('이름을 먼저 입력해주세요!'); showStep(1); return; }
+    if (!selectedStyle) { showToast('스타일을 선택해주세요 ✦'); return; }
+
+    showStep(3);
+    runLoading();
+  }
+
+  function runLoading() {
+    const texts = [
+      '성격을 분석하고 있어요...',
+      '비주얼을 구성하고 있어요...',
+      '아이돌을 깨우는 중이에요...'
+    ];
+    let idx = 0;
+    // Animate hearts
+    const hearts = document.getElementById('heartBar').querySelectorAll('span');
+    let filled = 0;
+    const heartInterval = setInterval(() => {
+      if (filled < hearts.length) {
+        hearts[filled].textContent = '♥';
+        hearts[filled].style.color = '#FF85A1';
+        filled++;
+      }
+    }, 300);
+
+    // Cycle text
+    document.getElementById('loadingText').textContent = texts[0];
+    const textInterval = setInterval(() => {
+      idx = (idx + 1) % texts.length;
+      document.getElementById('loadingText').textContent = texts[idx];
+    }, 900);
+
+    // Go to result
+    setTimeout(() => {
+      clearInterval(heartInterval);
+      clearInterval(textInterval);
+      buildResult();
+      showStep(4);
+      createResultParticles();
+    }, 2800);
+  }
+
+  function buildResult() {
+    const name = document.getElementById('idolName').value.trim();
+    const prompt = document.getElementById('idolPrompt').value.trim();
+
+    // Determine type
+    let darkCount = 0, brightCount = 0;
+    selectedTags.forEach(t => {
+      if (darkTags.includes(t)) darkCount++;
+      if (brightTags.includes(t)) brightCount++;
+    });
+    // Also check prompt text
+    if (prompt) {
+      ['차갑','카리스마','집착','츤데레'].forEach(w => { if(prompt.includes(w)) darkCount++; });
+      ['따뜻','순수','수줍','엉뚱','밝'].forEach(w => { if(prompt.includes(w)) brightCount++; });
+    }
+    resultType = (darkCount > brightCount) ? 'dark' : 'bright';
+
+    // Set image
+    document.getElementById('resultImg').src = `./assets/preset_${resultType}.png`;
+
+    // Set name & concept
+    document.getElementById('resultName').textContent = name;
+    document.getElementById('resultConcept').textContent = `✦ ${selectedStyle}`;
+
+    // Tags display
+    const tagEl = document.getElementById('resultTags');
+    tagEl.innerHTML = '';
+    if (selectedTags.length > 0) {
+      selectedTags.forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'result-tag';
+        span.textContent = t;
+        tagEl.appendChild(span);
+      });
+    } else if (prompt) {
+      const span = document.createElement('span');
+      span.className = 'result-tag';
+      span.textContent = '#나만의아이돌';
+      tagEl.appendChild(span);
+    }
+
+    // Intro
+    const intros = introTemplates[resultType];
+    document.getElementById('resultIntro').textContent = intros[Math.floor(Math.random() * intros.length)];
+
+    // Save to localStorage for home feed
+    localStorage.setItem('factoryChar', JSON.stringify({
+      name, style: selectedStyle,
+      img: `preset_${resultType}.png`,
+      tags: selectedTags
+    }));
+  }
+
+  function createResultParticles() {
+    const c = document.getElementById('resultParticles');
+    c.innerHTML = '';
+    const items = ['✦','♥','★','♡','✿'];
+    for (let i = 0; i < 16; i++) {
+      const p = document.createElement('span');
+      p.className = 'particle';
+      p.textContent = items[i % items.length];
+      p.style.left = (Math.random() * 90) + '%';
+      p.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+      p.style.animationDelay = (Math.random() * 1) + 's';
+      p.style.fontSize = (10 + Math.random() * 10) + 'px';
+      p.style.color = ['#FFB7C5','#D4B8E0','#B8E8D0','#FFD700'][i % 4];
+      c.appendChild(p);
+    }
+  }
+
+  function registerToHome() {
+    showToast('홈 피드에 등록됐어요! ❤️');
+    setTimeout(() => { location.href = 'index.html'; }, 1200);
+  }
+
+  function restart() {
+    selectedTags = [];
+    selectedStyle = '';
+    document.getElementById('idolName').value = '';
+    document.getElementById('idolPrompt').value = '';
+    document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected','dark-selected'));
+    document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('selected'));
+    // Reset hearts
+    const hearts = document.getElementById('heartBar').querySelectorAll('span');
+    hearts.forEach((h,i) => {
+      h.textContent = i < 4 ? '♥' : '♡';
+      h.style.color = i < 4 ? '' : '#ccc';
+    });
+    showStep(1);
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+</script>
+</body>
+</html>
