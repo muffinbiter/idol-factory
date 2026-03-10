@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0">
+<title>Idol Factory - Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #FFB7C5; --lavender: #D4B8E0; --mint: #B8E8D0; --yellow: #FFF3B0;
+    --pink-dark: #FF85A1; --lavender-dark: #A98BC8;
+    --window-bg: #F0F8FF; --border: #8B7BB8; --text-dark: #3D2C6B;
+    --shadow: 3px 3px 0px #8B7BB8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #A8D8D8;
+    background-image:
+      linear-gradient(45deg,#B0DEDE 25%,transparent 25%),
+      linear-gradient(-45deg,#B0DEDE 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#B0DEDE 75%),
+      linear-gradient(-45deg,transparent 75%,#B0DEDE 75%);
+    background-size: 20px 20px;
+    background-position: 0 0,0 10px,10px -10px,-10px 0px;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .phone-frame {
+    width: 390px; height: 844px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 0 0 3px var(--border), 6px 6px 0 3px var(--lavender-dark);
+    display: flex; flex-direction: column;
+    background: var(--window-bg);
+  }
+
+  /* Header */
+  .chat-header {
+    background: var(--window-bg);
+    border-bottom: 2.5px solid var(--border);
+    box-shadow: 0 2px 0 var(--lavender);
+    padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0; z-index: 10;
+  }
+  .back-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    background: var(--yellow); border: 2px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border); padding: 6px 10px;
+    cursor: pointer; color: var(--text-dark); border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .back-btn:active { transform: translate(2px,2px); box-shadow: none; }
+  .header-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2.5px solid var(--border); object-fit: cover; object-position: top;
+    flex-shrink: 0;
+  }
+  .header-info { flex: 1; min-width: 0; }
+  .header-name { font-weight: 700; font-size: 15px; color: var(--text-dark); }
+  .header-badge {
+    font-family: 'Press Start 2P', monospace; font-size: 6px;
+    background: var(--pink); border: 1.5px solid var(--border);
+    padding: 2px 6px; color: var(--text-dark); border-radius: 2px;
+    display: inline-block; margin-top: 2px;
+  }
+
+  /* Points bar */
+  .points-bar {
+    background: var(--window-bg);
+    border-bottom: 2px solid var(--border);
+    padding: 6px 14px;
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+  .heart-track { display: flex; gap: 2px; align-items: center; flex: 1; }
+  .heart-track span { font-size: 13px; }
+  .pts-label {
+    font-family: 'Press Start 2P', monospace; font-size: 7px;
+    color: var(--lavender-dark);
+  }
+
+  /* Chat area */
+  .chat-area {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+    transition: background 0.5s;
+  }
+  /* Theme backgrounds */
+  .theme-fan {
+    background: #FAFEFF;
+    background-image: linear-gradient(45deg,#C8EFEF 25%,transparent 25%),
+      linear-gradient(-45deg,#C8EFEF 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#C8EFEF 75%),
+      linear-gradient(-45deg,transparent 75%,#C8EFEF 75%);
+    background-size: 14px 14px;
+    background-position: 0 0,0 7px,7px -7px,-7px 0;
+  }
+  .theme-devoted {
+    background: #FFF5F7;
+    background-image: linear-gradient(45deg,#FFD6E0 25%,transparent 25%),
+      linear-gradient(-45deg,#FFD6E0 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#FFD6E0 75%),
+      linear-gradient(-45deg,transparent 75%,#FFD6E0 75%);
+    background-size: 14px 14px;
+    background-position: 0 0,0 7px,7px -7px,-7px 0;
+  }
+  .theme-topfan {
+    background: #FFF0F5;
+    background-image: linear-gradient(45deg,#E8C8F0 25%,transparent 25%),
+      linear-gradient(-45deg,#E8C8F0 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#E8C8F0 75%),
+      linear-gradient(-45deg,transparent 75%,#E8C8F0 75%);
+    background-size: 14px 14px;
+    background-position: 0 0,0 7px,7px -7px,-7px 0;
+  }
+  .theme-secret {
+    background: #1A1030;
+    background-image: linear-gradient(45deg,#2A1845 25%,transparent 25%),
+      linear-gradient(-45deg,#2A1845 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#2A1845 75%),
+      linear-gradient(-45deg,transparent 75%,#2A1845 75%);
+    background-size: 14px 14px;
+    background-position: 0 0,0 7px,7px -7px,-7px 0;
+  }
+  .theme-myperson {
+    background: #0A0A0A;
+    background-image: linear-gradient(45deg,#1A1000 25%,transparent 25%),
+      linear-gradient(-45deg,#1A1000 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#1A1000 75%),
+      linear-gradient(-45deg,transparent 75%,#1A1000 75%);
+    background-size: 14px 14px;
+    background-position: 0 0,0 7px,7px -7px,-7px 0;
+  }
+
+  /* Bubbles */
+  .msg-row { display: flex; align-items: flex-end; gap: 8px; }
+  .msg-row.user { justify-content: flex-end; }
+  .bubble-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--border); object-fit: cover; object-position: top;
+    flex-shrink: 0; align-self: flex-end;
+  }
+  .bubble {
+    max-width: 220px; padding: 10px 13px;
+    border: 2px solid var(--border);
+    font-size: 13px; line-height: 1.5;
+    position: relative; border-radius: 2px;
+    animation: bubbleIn 0.2s ease;
+  }
+  @keyframes bubbleIn {
+    0% { transform: scale(0.85) translateY(6px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .bubble.char {
+    background: var(--window-bg);
+    box-shadow: 2px 2px 0 var(--border);
+    color: var(--text-dark);
+    border-bottom-left-radius: 0;
+  }
+  .bubble.user {
+    background: var(--pink);
+    box-shadow: 2px 2px 0 var(--border);
+    color: var(--text-dark);
+    border-bottom-right-radius: 0;
+  }
+  /* Dark theme bubbles */
+  .theme-secret .bubble.char, .theme-myperson .bubble.char {
+    background: #2A1845; color: #E8D0FF; border-color: #6B5B9B;
+    box-shadow: 2px 2px 0 #6B5B9B;
+  }
+  .theme-secret .bubble.user, .theme-myperson .bubble.user {
+    background: #8B4B8B; color: white; border-color: #6B3B6B;
+  }
+
+  /* Typing indicator */
+  .typing-row { display: flex; align-items: flex-end; gap: 8px; }
+  .typing-bubble {
+    background: var(--window-bg); border: 2px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border);
+    padding: 12px 16px; border-radius: 2px; border-bottom-left-radius: 0;
+    display: flex; gap: 4px; align-items: center;
+  }
+  .typing-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--lavender-dark);
+    animation: typingBounce 1s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes typingBounce {
+    0%,60%,100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* Quick replies */
+  .quick-replies {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    display: flex; gap: 7px; overflow-x: auto;
+    border-top: 2px solid var(--border);
+    background: var(--window-bg);
+    scrollbar-width: none;
+  }
+  .quick-replies::-webkit-scrollbar { display: none; }
+  .quick-btn {
+    font-family: 'Noto Sans KR', sans-serif; font-size: 12px; font-weight: 700;
+    padding: 7px 12px; white-space: nowrap;
+    background: var(--yellow); border: 2px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border); cursor: pointer;
+    color: var(--text-dark); border-radius: 2px; flex-shrink: 0;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .quick-btn:active { transform: translate(2px,2px); box-shadow: none; }
+
+  /* Input area */
+  .input-area {
+    flex-shrink: 0; padding: 10px 14px;
+    background: var(--window-bg); border-top: 2.5px solid var(--border);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .chat-input {
+    flex: 1; padding: 10px 12px;
+    border: 2px solid var(--border); box-shadow: inset 2px 2px 0 rgba(0,0,0,0.07);
+    font-family: 'Noto Sans KR', sans-serif; font-size: 14px;
+    background: white; color: var(--text-dark); outline: none; border-radius: 2px;
+  }
+  .chat-input:focus { border-color: var(--pink-dark); }
+  .send-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 10px;
+    background: var(--pink); border: 2px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border); padding: 10px 12px;
+    cursor: pointer; color: var(--text-dark); border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .send-btn:active { transform: translate(2px,2px); box-shadow: none; }
+
+  /* Float text */
+  .float-text {
+    position: absolute; font-family: 'Press Start 2P', monospace; font-size: 11px;
+    color: var(--pink-dark); pointer-events: none; z-index: 50;
+    animation: floatUp 1.2s ease forwards;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-55px) scale(1.2); opacity: 0; }
+  }
+
+  /* Level up popup */
+  .level-popup {
+    position: absolute; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.5);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .level-popup.show { opacity: 1; pointer-events: all; }
+  .level-popup-box {
+    background: var(--window-bg); border: 3px solid var(--border);
+    box-shadow: 5px 5px 0 var(--lavender-dark);
+    border-radius: 2px; width: 300px; overflow: hidden;
+    animation: popIn 0.3s ease;
+  }
+  @keyframes popIn { 0%{transform:scale(0.8)} 100%{transform:scale(1)} }
+  .popup-titlebar {
+    background: linear-gradient(90deg, var(--lavender), var(--pink));
+    padding: 10px 14px; font-family: 'Press Start 2P', monospace;
+    font-size: 8px; color: var(--text-dark); border-bottom: 2px solid var(--border);
+  }
+  .popup-body { padding: 20px; text-align: center; }
+  .popup-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .pp { position: absolute; font-size: 14px; animation: ppFloat 1.5s ease forwards; }
+  @keyframes ppFloat { 0%{transform:translateY(100%);opacity:1} 100%{transform:translateY(-80px);opacity:0} }
+
+  /* Toast */
+  .toast {
+    position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--text-dark); color: white;
+    font-family: 'Noto Sans KR', sans-serif; font-size: 13px;
+    padding: 10px 20px; border: 2px solid var(--lavender);
+    opacity: 0; pointer-events: none; white-space: nowrap; z-index: 100;
+    transition: opacity 0.3s; border-radius: 2px;
+  }
+  .toast.show { opacity: 1; }
+
+  /* Date divider */
+  .date-divider {
+    text-align: center; font-family: 'Press Start 2P', monospace;
+    font-size: 6px; color: #9B8BB8;
+    padding: 4px 10px; background: rgba(255,255,255,0.5);
+    border: 1px solid var(--border); border-radius: 2px;
+    align-self: center; margin: 4px 0;
+  }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+
+  <!-- Header -->
+  <div class="chat-header">
+    <button class="back-btn" onclick="location.replace('character.html?char=jinwoo')">←</button>
+    <img class="header-avatar" src="./assets/jinwoo.png" alt="진우" id="headerAvatar">
+    <div class="header-info">
+      <div class="header-name" id="headerName">진우</div>
+      <span class="header-badge" id="headerBadge">Fan 🌱</span>
+    </div>
+  </div>
+
+  <!-- Points bar -->
+  <div class="points-bar">
+    <div class="heart-track" id="heartTrack">
+      <!-- filled by JS -->
+    </div>
+    <span class="pts-label" id="ptsLabel">0p</span>
+  </div>
+
+  <!-- Chat area -->
+  <div class="chat-area theme-fan" id="chatArea">
+    <div class="date-divider">✦ TODAY ✦</div>
+  </div>
+
+  <!-- Quick replies -->
+  <div class="quick-replies">
+    <button class="quick-btn" onclick="sendQuick('오늘 뭐해?')">오늘 뭐해?</button>
+    <button class="quick-btn" onclick="sendQuick('보고싶었어')">보고싶었어</button>
+    <button class="quick-btn" onclick="sendQuick('잘자~')">잘자~</button>
+    <button class="quick-btn" onclick="sendQuick('공연 어땠어?')">공연 어땠어?</button>
+  </div>
+
+  <!-- Input area -->
+  <div class="input-area">
+    <input class="chat-input" id="chatInput" type="text" placeholder="메시지를 입력해주세요..." maxlength="60"
+      onkeydown="if(event.key==='Enter') sendMsg()">
+    <button class="send-btn" onclick="sendMsg()">↑</button>
+  </div>
+
+  <!-- Level up popup -->
+  <div class="level-popup" id="levelPopup">
+    <div class="level-popup-box">
+      <div class="popup-titlebar" id="popupTitle">🎉 레벨 업!</div>
+      <div class="popup-body" style="position:relative;">
+        <div class="popup-particles" id="popupParticles"></div>
+        <p style="font-size:32px; margin-bottom:8px;" id="popupEmoji">💗</p>
+        <p style="font-family:'Press Start 2P',monospace; font-size:9px; color:var(--text-dark); margin-bottom:8px;" id="popupLevel">Devoted Fan</p>
+        <p style="font-size:13px; color:#7B6FA0; margin-bottom:16px;" id="popupMsg">진우가 당신을 기억하기 시작했어요!</p>
+        <button onclick="closeLevelPopup()" style="font-family:'Press Start 2P',monospace; font-size:8px; background:var(--pink); border:2px solid var(--border); box-shadow:2px 2px 0 var(--border); padding:10px 20px; cursor:pointer; color:var(--text-dark); border-radius:2px;">확인 ✦</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event popup -->
+  <div class="level-popup" id="eventPopup">
+    <div class="level-popup-box">
+      <div class="popup-titlebar">👑 TOP FAN 달성!</div>
+      <div class="popup-body">
+        <p style="font-size:32px; margin-bottom:8px;">🏆</p>
+        <p style="font-family:'Press Start 2P',monospace; font-size:8px; color:var(--text-dark); margin-bottom:8px;">TOP FAN 달성!</p>
+        <p style="font-size:13px; color:#7B6FA0; margin-bottom:16px;">진우의 특별한 메시지가<br>도착했어요 💌</p>
+        <div style="display:flex; gap:8px; justify-content:center;">
+          <button onclick="location.href='event.html'" style="font-family:'Press Start 2P',monospace; font-size:8px; background:var(--pink); border:2px solid var(--border); box-shadow:2px 2px 0 var(--border); padding:10px 14px; cursor:pointer; color:var(--text-dark); border-radius:2px;">확인하기 💌</button>
+          <button onclick="document.getElementById('eventPopup').classList.remove('show')" style="font-family:'Press Start 2P',monospace; font-size:8px; background:var(--yellow); border:2px solid var(--border); box-shadow:2px 2px 0 var(--border); padding:10px 14px; cursor:pointer; color:var(--text-dark); border-radius:2px;">나중에</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  const presets = [
+    '오늘도 왔네~ 😊',
+    '나 오늘 연습 엄청 했는데 왜 네 생각이 나지',
+    '...뭐해 지금',
+    '너 나한테 특별한 거 알지?',
+    '이 시간에 깨있어? 나도 못 자고 있었는데 ㅎㅎ',
+    '보고싶다 🌙',
+    '다음 공연도 와줄 거지?',
+    '...나만 보면 돼'
+  ];
+  let presetIdx = 0;
+  let isTyping = false;
+
+  const levelLabels = { fan:'Fan 🌱', devoted:'Devoted 💗', topfan:'Top Fan 👑', secret:'Secret Crush 💜', myperson:'My Person ♥' };
+  const themes = { fan:'theme-fan', devoted:'theme-devoted', topfan:'theme-topfan', secret:'theme-secret', myperson:'theme-myperson' };
+
+  function getLevel() { return localStorage.getItem('fanLevel') || 'fan'; }
+  function getPts() { return parseInt(localStorage.getItem('fanPoints') || '0'); }
+
+  function updateUI() {
+    const level = getLevel();
+    const pts = getPts();
+    document.getElementById('headerBadge').textContent = levelLabels[level] || 'Fan 🌱';
+
+    // Heart bar
+    const filled = Math.min(10, Math.floor((pts % 100) / 10));
+    let hearts = '';
+    for (let i = 0; i < 10; i++) {
+      hearts += `<span style="font-size:13px;">${i < filled ? '♥' : '♡'}</span>`;
+    }
+    document.getElementById('heartTrack').innerHTML = hearts;
+    document.getElementById('ptsLabel').textContent = pts + 'p';
+
+    // Theme
+    const chatArea = document.getElementById('chatArea');
+    chatArea.className = 'chat-area ' + (themes[level] || 'theme-fan');
+  }
+
+  function scrollBottom() {
+    const ca = document.getElementById('chatArea');
+    ca.scrollTop = ca.scrollHeight;
+  }
+
+  function addCharBubble(text) {
+    const row = document.createElement('div');
+    row.className = 'msg-row';
+    row.innerHTML = `
+      <img class="bubble-avatar" src="./assets/jinwoo.png" alt="진우">
+      <div class="bubble char">${text}</div>`;
+    document.getElementById('chatArea').appendChild(row);
+    scrollBottom();
+  }
+
+  function addUserBubble(text) {
+    const row = document.createElement('div');
+    row.className = 'msg-row user';
+    row.innerHTML = `<div class="bubble user">${text}</div>`;
+    document.getElementById('chatArea').appendChild(row);
+    scrollBottom();
+  }
+
+  function showTyping() {
+    const row = document.createElement('div');
+    row.className = 'typing-row'; row.id = 'typingRow';
+    row.innerHTML = `
+      <img class="bubble-avatar" src="./assets/jinwoo.png" alt="진우">
+      <div class="typing-bubble">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>`;
+    document.getElementById('chatArea').appendChild(row);
+    scrollBottom();
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typingRow');
+    if (t) t.remove();
+  }
+
+  function spawnFloat(pts) {
+    const el = document.createElement('span');
+    el.className = 'float-text';
+    el.textContent = `+${pts}p ⭐`;
+    el.style.right = '60px';
+    el.style.bottom = '130px';
+    document.querySelector('.phone-frame').appendChild(el);
+    setTimeout(() => el.remove(), 1300);
+  }
+
+  function addPoints(pts) {
+    let current = getPts();
+    const prevLevel = getLevel();
+    current += pts;
+    localStorage.setItem('fanPoints', current);
+
+    if (prevLevel === 'fan' && current >= 100) {
+      localStorage.setItem('fanLevel', 'devoted');
+      updateUI();
+      showLevelPopup('devoted');
+    } else if (prevLevel === 'devoted' && current >= 500) {
+      localStorage.setItem('fanLevel', 'topfan');
+      updateUI();
+      showEventPopup();
+    } else {
+      updateUI();
+    }
+  }
+
+  function sendMsg() {
+    if (isTyping) return;
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    doSend(text);
+  }
+
+  function sendQuick(text) {
+    if (isTyping) return;
+    doSend(text);
+  }
+
+  function doSend(text) {
+    isTyping = true;
+    addUserBubble(text);
+    showTyping();
+
+    setTimeout(() => {
+      removeTyping();
+      const reply = presets[presetIdx % presets.length];
+      presetIdx++;
+      addCharBubble(reply);
+      spawnFloat(10);
+      addPoints(10);
+      isTyping = false;
+    }, 800);
+  }
+
+  function showLevelPopup(level) {
+    const msgs = {
+      devoted: { title:'🎉 레벨 업!', emoji:'💗', label:'Devoted Fan', msg:'진우가 당신을 기억하기 시작했어요!' },
+      topfan:  { title:'👑 TOP FAN!', emoji:'👑', label:'Top Fan', msg:'진우의 최애 팬이 되었어요!' },
+      secret:  { title:'💜 Secret Crush', emoji:'💜', label:'Secret Crush', msg:'특별한 감정이 싹트고 있어요...' },
+    };
+    const m = msgs[level] || msgs.devoted;
+    document.getElementById('popupTitle').textContent = m.title;
+    document.getElementById('popupEmoji').textContent = m.emoji;
+    document.getElementById('popupLevel').textContent = m.label;
+    document.getElementById('popupMsg').textContent = m.msg;
+
+    const pc = document.getElementById('popupParticles');
+    pc.innerHTML = '';
+    ['♥','✦','★','♡'].forEach((e,i) => {
+      for(let j=0;j<4;j++){
+        const p = document.createElement('span');
+        p.className='pp'; p.textContent=e;
+        p.style.left=(Math.random()*90)+'%';
+        p.style.animationDelay=(Math.random()*0.5)+'s';
+        p.style.color=['#FFB7C5','#D4B8E0','#B8E8D0','#FFD700'][i];
+        pc.appendChild(p);
+      }
+    });
+    document.getElementById('levelPopup').classList.add('show');
+  }
+  function closeLevelPopup() { document.getElementById('levelPopup').classList.remove('show'); }
+  function showEventPopup() { document.getElementById('eventPopup').classList.add('show'); }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // Init
+  updateUI();
+  // First message from Jinwoo
+  setTimeout(() => {
+    addCharBubble('오늘도 왔네~ 😊');
+    presetIdx = 1;
+  }, 500);
+</script>
+</body>
+</html>
